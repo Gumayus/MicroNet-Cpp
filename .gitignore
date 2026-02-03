@@ -1,0 +1,11 @@
+text
+build/
+*.onnx
+*.bin
+*.pth
+*.pth.tar
+*.weights
+*.o
+*.elf
+__pycache__/
+.vscode/
