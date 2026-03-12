@@ -5,8 +5,7 @@
 #include <chrono>
 #include <opencv2/opencv.hpp>
 
-// --- 1. 包含你手搓的算子库和网络 ---
-// 确保这些路径在 CMakeLists.txt 里配置好了
+
 #include "tensor.h"
 #include "MicroUNet.h" // 你刚写的 U-Net 结构
 
@@ -37,7 +36,7 @@ Tensor mat_to_tensor(const Mat &img)
     return input;
 }
 
-// --- 3. 手搓后处理流水线 ---
+
 void visualize_manual(const Tensor &output, Mat &original_img)
 {
     // 1. 获取指针
@@ -54,7 +53,7 @@ void visualize_manual(const Tensor &output, Mat &original_img)
         mask_data[i] = (prob > 0.5f) ? 255 : 0;
     }
 
-    // 4. 手搓 Resize
+    // 4. Resize
     Mat mask_resized(original_img.size(), CV_8UC1);
     float scale_x = (float)W / original_img.cols;
     float scale_y = (float)H / original_img.rows;
@@ -69,20 +68,20 @@ void visualize_manual(const Tensor &output, Mat &original_img)
         }
     }
 
-    // 5. 手搓 Blending
+    // 5.  Blending
     Mat color_mask = Mat::zeros(original_img.size(), original_img.type());
     color_mask.setTo(Scalar(0, 255, 0), mask_resized); // 绿色
 
     addWeighted(original_img, 0.7, color_mask, 0.3, 0, original_img);
 }
 
-// --- 4. 总指挥部 ---
+
 int main()
 {
     string weight_path = "unet_weights.bin";
     string image_path = "test_car.jpg";
 
-    // 1. 初始化模型并装填“灵魂”
+   
     cout << ">>> [Init] Building MicroUNet and loading weights..." << endl;
     UNet model;
     model.load_bin(weight_path); // 确保 load_bin 已经写好
@@ -99,7 +98,7 @@ int main()
     // 3. 预处理
     Tensor input = mat_to_tensor(img);
 
-    // 4. 🔥 手搓前向传播 🔥
+    
     cout << ">>> [Core] Running MicroTensor Forward Pass..." << endl;
     auto start = chrono::high_resolution_clock::now();
     Tensor output = model.forward(input);
@@ -108,7 +107,7 @@ int main()
     cout << ">>> [Core] Inference Done. Time: "
          << chrono::duration_cast<chrono::milliseconds>(end - start).count() << "ms" << endl;
 
-    // 5. 🔥 手搓后处理 🔥
+ 
     visualize_manual(output, img);
 
     // 6. 弹窗显示
