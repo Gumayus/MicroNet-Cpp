@@ -7,10 +7,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # 1. 寻找 OpenCV
 find_package(OpenCV REQUIRED)
 
-# 2. 🔥 核心修正：包含 OpenCV 和你的库
+
 include_directories(
-    .                      # 当前目录
-    ../                    # 上一级目录（找到 MicroTensor 和 Microyolo）
+    .                    
+    ../                  
     ${OpenCV_INCLUDE_DIRS} # OpenCV 的路径
 )
 
