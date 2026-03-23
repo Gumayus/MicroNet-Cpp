@@ -321,10 +321,7 @@ public:
 
         // 5. 创建结果张量
         Tensor out(out_shape);
-
-        // =================================================
-        //  路径 A: 2D 矩阵乘法 (Linear 层)
-        // =================================================
+        
         if (ndim == 2) 
         {
             // OpenMP 并行加速 (如果编译器支持)
@@ -340,16 +337,13 @@ public:
                 }
             }
         }
-        // =================================================
-        //  路径 B: 4D 批量矩阵乘法 (Attention 层)
-        //  形状: [Batch, Head, Seq, Dim]
-        // =================================================
+    
         else if (ndim == 4) 
         {
             int B_dim = shape[0];  // Batch Size
             int NH_dim = shape[1]; // Num Heads
 
-            // 四重循环太深？其实前两维是“并行”的，后三维是“计算”
+           
             #pragma omp parallel for collapse(2) // 并行处理每个 Batch 和 Head
             for (int b = 0; b < B_dim; ++b) {
                 for (int nh = 0; nh < NH_dim; ++nh) {
@@ -360,8 +354,7 @@ public:
                         for (int j = 0; j < N; ++j) {
                             float sum = 0.0f;
                             for (int k = 0; k < K; ++k) {
-                                // 核心魔法：使用 at_4d 穿透 stride 的迷雾
-                                // 即使 K 被 transpose 转置过，at_4d 也能找到正确的位置
+                                
                                 float val_a = this->at_4d(b, nh, i, k);
                                 float val_b = other.at_4d(b, nh, k, j);
                                 sum += val_a * val_b;
@@ -428,15 +421,11 @@ public:
             exit(1);
         }
 
-        // 3. 构造结果形状
-        // 保持维度数不变，但最后一维变成 1 (KeepDim=True)
+    
         std::vector<int> out_shape = this->shape;
         out_shape[axis] = 1;
         Tensor out(out_shape);
 
-        // =================================================
-        //  路径 A: 2D 情况 [rows, cols] -> [rows, 1]
-        // =================================================
         if (ndim == 2) 
         {
             int rows = shape[0];
@@ -450,9 +439,7 @@ public:
                 out.at(i, 0) = total;
             }
         }
-        // =================================================
-        //  路径 B: 4D 情况 [B, NH, T, D] -> [B, NH, T, 1]
-        // =================================================
+       
         else if (ndim == 4) 
         {
             int B  = shape[0];
@@ -592,7 +579,7 @@ public:
         return data[offset];
     }
 
-    // 只读版
+  
     const float& at_4d(int i0, int i1, int i2, int i3) const {
         int offset = i0 * strides[0] + 
                      i1 * strides[1] + 
@@ -601,9 +588,7 @@ public:
         return data[offset];
     }
 
-    // ---------------------------------------------------------
-    //  Contiguous: 内存连续化 (深拷贝 + 重排)
-    // ---------------------------------------------------------
+  
     Tensor contiguous() const {
         // 1. 创建一个形状一样的新张量
         // 注意：新张量的构造函数会自动计算出“标准的、连续的”strides
@@ -630,8 +615,7 @@ public:
                  }
              }
         } else {
-            // 如果不是 4D，暂时直接拷贝 (偷懒做法，反正 GPT 里主要是 4D 需要这个)
-            // 严谨点应该报错或者写通用递归
+           
             out = *this; 
             std::cerr << "Warning: contiguous only implemented for 4D tensors!" << std::endl;
         }
